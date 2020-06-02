@@ -1,64 +1,63 @@
 import React from 'react';
-import {View, Text, StyleSheet, Dimensions, FlatList} from 'react-native';
+import {Alert, Platform} from 'react-native';
+import {connect} from 'react-redux';
+import {fetchData} from '../redux/actionCreators';
+import Form from './FakeDataForm';
+import FakeData from './FakeDataScreen';
+import {createStackNavigator} from '@react-navigation/stack';
+import {NavigationContainer} from '@react-navigation/native';
+import {Button} from 'react-native-elements';
 
-const boxes = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
-
-const numOfBoxesInARow = 2;
-
-const SCREEN_WIDTH = Math.floor(Dimensions.get('window').width);
-
-export default class Main extends React.Component {
-  renderBoxes = ({item, index}) => {
-    if (typeof item !== 'string') {
-      return (
-        <View style={[styles.boxView, {backgroundColor: '#0f0'}]} key={index}>
-          <Text>{item}</Text>
-        </View>
-      );
-    } else {
-      return (
-        <View style={[styles.boxView, {backgroundColor: '#fff'}]} key={index} />
-      );
-    }
+const mapStateToProps = (state) => {
+  return {
+    data: state.data,
   };
+};
 
-  makeNoOfBoxesComplete = (data, numOfColumns) => {
-    const numOfFullRows = Math.floor(data.length / numOfColumns);
+const mapDispatchToProps = (dispatch) => ({
+  fetchData: (pageNum) => dispatch(fetchData(pageNum)),
+});
 
-    let numOfBoxesInLastRow = data.length - numOfFullRows * numOfColumns;
-    while (numOfBoxesInLastRow < numOfColumns && numOfBoxesInLastRow !== 0) {
-      data.push('new');
-      numOfBoxesInLastRow += 1;
-    }
-    return data;
-  };
+const Stack = createStackNavigator();
+
+class Main extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {};
+  }
+
+  componentDidMount() {
+    this.props.fetchData();
+  }
 
   render() {
-    const data = this.makeNoOfBoxesComplete(boxes, numOfBoxesInARow);
     return (
-      <FlatList
-        data={data}
-        style={styles.box}
-        keyExtractor={(item) => item}
-        renderItem={this.renderBoxes}
-        numColumns={numOfBoxesInARow}
-      />
+      <NavigationContainer>
+        <Stack.Navigator>
+          <Stack.Screen
+            name="FakeData"
+            component={FakeData}
+            options={{
+              headerTitle: 'Fake Data',
+              headerStyle: {
+                backgroundColor: Platform.OS === 'android' ? '#008cff' : '#fff',
+              },
+              headerTintColor: Platform.OS === 'android' ? '#fff' : '#008cff',
+            }}
+          />
+          <Stack.Screen
+            name="Form"
+            component={Form}
+            options={{
+              headerTitle: 'Fake Data',
+              headerStyle: {backgroundColor: '#008cff'},
+              headerTintColor: '#fff',
+            }}
+          />
+        </Stack.Navigator>
+      </NavigationContainer>
     );
   }
 }
 
-const styles = StyleSheet.create({
-  boxView: {
-    flex: 1,
-    marginVertical: SCREEN_WIDTH / 200,
-    marginRight: SCREEN_WIDTH / 100,
-    height: 200,
-    justifyContent: 'center',
-    alignItems: 'center',
-    alignContent: 'stretch',
-  },
-  box: {
-    marginLeft: SCREEN_WIDTH / 100,
-    backgroundColor: '#fff',
-  },
-});
+export default connect(mapStateToProps, mapDispatchToProps)(Main);
